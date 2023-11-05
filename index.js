@@ -26,6 +26,15 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
     const bookCollection = client.db("libraryManagement").collection("books");
+    const categoryCollection = client
+      .db("libraryManagement")
+      .collection("categories");
+
+    // category related api
+    app.get("/api/v1/categories", async (req, res) => {
+      const result = await categoryCollection.find().toArray();
+      res.send(result);
+    });
 
     /////Books related api
     // get data method
