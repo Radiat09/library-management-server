@@ -52,10 +52,25 @@ async function run() {
 
     // get specific id book data
     app.get("/api/v1/books/:id", async (req, res) => {
-      const { id } = req.params;
+      const id = req.params;
       console.log(id);
       const query = { _id: new ObjectId(id) };
       const result = await bookCollection.findOne(query);
+      res.send(result);
+    });
+    // Update book data
+    app.patch("/api/v1/books/:id", async (req, res) => {
+      const id = req.params.id;
+      const { quantity } = req.body;
+      console.log(id, quantity);
+      const filter = { _id: new ObjectId(id) };
+      const updatedDoc = {
+        $set: {
+          quantity: quantity,
+        },
+      };
+
+      const result = await bookCollection.updateOne(filter, updatedDoc);
       res.send(result);
     });
 
