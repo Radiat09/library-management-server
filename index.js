@@ -8,7 +8,7 @@ require("dotenv").config();
 // middleware
 app.use(express.json());
 app.use(cors());
-console.log(process.env.DB_USER, process.env.DB_PASS);
+// console.log(process.env.DB_USER, process.env.DB_PASS);
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.fgalepw.mongodb.net/?retryWrites=true&w=majority`;
 
@@ -39,14 +39,21 @@ async function run() {
     /////Books related api
     // get data method
     app.get("/api/v1/books", async (req, res) => {
-      const result = await bookCollection.find().toArray();
+      let query = {};
+
+      const category = req.query.category;
+      if (category) {
+        query.category = category;
+      }
+      console.log(query);
+      const result = await bookCollection.find({ query }).toArray();
       res.send(result);
     });
 
     // post data method
     app.post("/api/v1/books", async (req, res) => {
       const book = req.body;
-      console.log(book);
+      // console.log(book);
       const result = await bookCollection.insertOne(book);
       res.send(result);
     });
