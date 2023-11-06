@@ -64,20 +64,40 @@ async function run() {
     // get borrowed books
     app.get("/api/v1/borrowedbooks", async (req, res) => {
       const { email } = req.query;
-      console.log(email);
+      // console.log(email);
       let query = {};
       if (req.query?.email) {
         query = { userEmail: email };
       }
-
       const result = await borrowBookCollection.find(query).toArray();
       res.send(result);
     });
+
+    // app.get("/api/v1/borrowedbooks/check", async (req, res) => {
+    //   // const { userEmail, bookName } = req.query;
+    //   const email = req.query.userEmail;
+    //   const book = req.query.bookName;
+    //   // const query = { bookName: book };
+    //   // console.log();
+    //   let filter = { userEmail: email };
+
+    //   const result = await borrowBookCollection.findOne(filter);
+    //   // console.log(result);
+    //   res.send(result);
+    // });
+
+    // app.get("/api/v1/borrowedbooks", async (req, res) => {
+    //   const id = req.params.id;
+
+    //   const query = { _id };
+    // });
+
     // Update book data
     app.patch("/api/v1/books/:id", async (req, res) => {
       const id = req.params.id;
+      // console.log(id);
       const { quantity } = req.body;
-      // console.log(id, quantity);
+      console.log(id, quantity);
       const filter = { _id: new ObjectId(id) };
       const updatedDoc = {
         $set: {
@@ -102,6 +122,15 @@ async function run() {
       const book = req.body;
       // console.log(book);
       const result = await bookCollection.insertOne(book);
+      res.send(result);
+    });
+
+    // Delete borrowed books
+    app.delete("/api/v1/borrowedbooks/:id", async (req, res) => {
+      const id = req.params.id;
+      console.log(id);
+      const query = { _id: new ObjectId(id) };
+      const result = await borrowBookCollection.deleteOne(query);
       res.send(result);
     });
 
