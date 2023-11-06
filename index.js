@@ -61,6 +61,7 @@ async function run() {
       const result = await bookCollection.findOne(query);
       res.send(result);
     });
+
     // get borrowed books
     app.get("/api/v1/borrowedbooks", async (req, res) => {
       const { email } = req.query;
@@ -92,12 +93,33 @@ async function run() {
     //   const query = { _id };
     // });
 
+    // Update Book
+    app.put("/api/v1/books/:id", async (req, res) => {
+      const { id } = req.params;
+      const book = req.body;
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          bookName: book.bookName,
+          authorName: book.authorName,
+          category: book.category,
+          quantity: book.quantity,
+          rating: book.rating,
+          photoUrl: book.photoUrl,
+          description: book.description,
+        },
+      };
+      const result = await bookCollection.updateOne(filter, updateDoc, options);
+      res.send(result);
+    });
+
     // Update book data
     app.patch("/api/v1/books/:id", async (req, res) => {
       const id = req.params.id;
       // console.log(id);
       const { quantity } = req.body;
-      console.log(id, quantity);
+      // console.log(id, quantity);
       const filter = { _id: new ObjectId(id) };
       const updatedDoc = {
         $set: {
