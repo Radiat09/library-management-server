@@ -29,6 +29,9 @@ async function run() {
     const categoryCollection = client
       .db("libraryManagement")
       .collection("categories");
+    const borrowBookCollection = client
+      .db("libraryManagement")
+      .collection("borrowedBooks");
 
     // category related api
     app.get("/api/v1/categories", async (req, res) => {
@@ -53,16 +56,25 @@ async function run() {
     // get specific id book data
     app.get("/api/v1/books/:id", async (req, res) => {
       const id = req.params;
-      console.log(id);
+      // console.log(id);
       const query = { _id: new ObjectId(id) };
       const result = await bookCollection.findOne(query);
+      res.send(result);
+    });
+    // get borrowed books
+    app.get("/api/v1/borrowedbooks", async (req, res) => {
+      const { email } = req.query;
+      console.log(email);
+      const query = { email: email };
+
+      const result = await borrowBookCollection.find(query).toArray();
       res.send(result);
     });
     // Update book data
     app.patch("/api/v1/books/:id", async (req, res) => {
       const id = req.params.id;
       const { quantity } = req.body;
-      console.log(id, quantity);
+      // console.log(id, quantity);
       const filter = { _id: new ObjectId(id) };
       const updatedDoc = {
         $set: {
@@ -74,7 +86,15 @@ async function run() {
       res.send(result);
     });
 
-    // post data method
+    // post borrowed book api
+    app.post("/api/v1/borrowedbooks", async (req, res) => {
+      const borrowedBooks = req.body;
+      const result = await borrowBookCollection.insertOne(borrowedBooks);
+      // console.log(req.body);
+      res.send(result);
+    });
+
+    // post book data method
     app.post("/api/v1/books", async (req, res) => {
       const book = req.body;
       // console.log(book);
