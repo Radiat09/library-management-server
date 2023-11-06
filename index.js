@@ -65,7 +65,10 @@ async function run() {
     app.get("/api/v1/borrowedbooks", async (req, res) => {
       const { email } = req.query;
       console.log(email);
-      const query = { email: email };
+      let query = {};
+      if (req.query?.email) {
+        query = { userEmail: email };
+      }
 
       const result = await borrowBookCollection.find(query).toArray();
       res.send(result);
