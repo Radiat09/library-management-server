@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const jwt = require("jsonwebtoken");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const app = express();
 const port = process.env.PORT || 9000;
@@ -7,7 +8,12 @@ require("dotenv").config();
 
 // middleware
 app.use(express.json());
-app.use(cors());
+app.use(
+  cors({
+    origin: ["http://localhost:5173/"],
+    credentials: true,
+  })
+);
 // console.log(process.env.DB_USER, process.env.DB_PASS);
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.fgalepw.mongodb.net/?retryWrites=true&w=majority`;
@@ -124,6 +130,24 @@ async function run() {
       const result = await bookCollection.updateOne(filter, updatedDoc);
       res.send(result);
     });
+
+    ///////// JWT///////
+    app.post("/api/v1/jwt", async (req, res) => {
+      // console.log(process.env.SECRET);
+      const user = req.body;
+      console.log(user);
+      const token = jwt.sign(user, process.env.SECRET, { expiresIn: "3h" });
+
+      // console.log(token);
+      res
+        .cookie("tok", token, {
+          httpOnly: true,
+          sequre: true,
+        })
+        .send({ success: true });
+    });
+
+    /////////////////////
 
     // post borrowed book api
     app.post("/api/v1/borrowedbooks", async (req, res) => {
