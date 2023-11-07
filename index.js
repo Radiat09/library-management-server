@@ -7,13 +7,13 @@ const port = process.env.PORT || 9000;
 require("dotenv").config();
 
 // middleware
-app.use(express.json());
 app.use(
   cors({
-    origin: ["http://localhost:5173/"],
+    origin: ["http://localhost:5173"],
     credentials: true,
   })
 );
+app.use(express.json());
 // console.log(process.env.DB_USER, process.env.DB_PASS);
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.fgalepw.mongodb.net/?retryWrites=true&w=majority`;
@@ -132,17 +132,19 @@ async function run() {
     });
 
     ///////// JWT///////
-    app.post("/api/v1/jwt", async (req, res) => {
+    app.post("/jwt", async (req, res) => {
       // console.log(process.env.SECRET);
       const user = req.body;
-      console.log(user);
-      const token = jwt.sign(user, process.env.SECRET, { expiresIn: "3h" });
+      console.log("user For token", user);
+      const token = jwt.sign(user, process.env.SECRET, {
+        expiresIn: "3h",
+      });
 
       // console.log(token);
       res
         .cookie("tok", token, {
           httpOnly: true,
-          sequre: true,
+          secure: true,
         })
         .send({ success: true });
     });
