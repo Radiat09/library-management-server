@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
+const cookieParser = require("cookie-parser");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const app = express();
 const port = process.env.PORT || 9000;
@@ -14,6 +15,24 @@ app.use(
   })
 );
 app.use(express.json());
+app.use(cookieParser());
+
+const gateman = (req, res, next) => {
+  const { tok } = req.cookies;
+  if (!tok) {
+    return res.status(404).send({ message: "not found" });
+  }
+
+  jwt.verify(tok, process.env.SECRET, function (err, decoded) {
+    if (err) {
+      return res.status(401).send({ message: "not authorized" });
+    }
+    console.log(decoded);
+  });
+
+  next();
+};
+
 // console.log(process.env.DB_USER, process.env.DB_PASS);
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.fgalepw.mongodb.net/?retryWrites=true&w=majority`;
@@ -47,7 +66,7 @@ async function run() {
 
     /////Books related api
     // get data method
-    app.get("/api/v1/books", async (req, res) => {
+    app.get("/api/v1/books", gateman, async (req, res) => {
       let query = {};
 
       const category = req.query.category;
@@ -69,7 +88,7 @@ async function run() {
     });
 
     // get borrowed books
-    app.get("/api/v1/borrowedbooks", async (req, res) => {
+    app.get("/api/v1/borrowedbooks", gateman, async (req, res) => {
       const { email } = req.query;
       // console.log(email);
       let query = {};
@@ -135,7 +154,7 @@ async function run() {
     app.post("/jwt", async (req, res) => {
       // console.log(process.env.SECRET);
       const user = req.body;
-      console.log("user For token", user);
+      // console.log("user For token", user);
       const token = jwt.sign(user, process.env.SECRET, {
         expiresIn: "3h",
       });
@@ -149,6 +168,11 @@ async function run() {
         .send({ success: true });
     });
 
+    app.post("/logout", async (req, res) => {
+      const user = req.body;
+      res.clearCookie("tok", { maxAge: 0 }).send({ success: true });
+    });
+
     /////////////////////
 
     // post borrowed book api
@@ -160,7 +184,7 @@ async function run() {
     });
 
     // post book data method
-    app.post("/api/v1/books", async (req, res) => {
+    app.post("/api/v1/books", gateman, async (req, res) => {
       const book = req.body;
       // console.log(book);
       const result = await bookCollection.insertOne(book);
