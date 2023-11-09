@@ -10,7 +10,12 @@ require("dotenv").config();
 // middleware
 app.use(
   cors({
-    origin: ["http://localhost:5173"],
+    origin: [
+      // https: //library-management-rid.web.app
+      "http://localhost:5173",
+      "https://library-management-rid.web.app",
+      "https://library-management-rid.firebaseapp.com",
+    ],
     credentials: true,
   })
 );
@@ -18,8 +23,9 @@ app.use(express.json());
 app.use(cookieParser());
 
 const gateman = (req, res, next) => {
-  const { tok } = req.cookies;
-  if (!tok) {
+  const token = req.cookies.token;
+  console.log(token);
+  if (!token) {
     return res.status(404).send({ message: "not found" });
   }
 
@@ -27,13 +33,12 @@ const gateman = (req, res, next) => {
     if (err) {
       return res.status(401).send({ message: "not authorized" });
     }
-    console.log(decoded);
+
+    req.user = decoded;
   });
 
   next();
 };
-
-// console.log(process.env.DB_USER, process.env.DB_PASS);
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.fgalepw.mongodb.net/?retryWrites=true&w=majority`;
 
@@ -49,7 +54,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
     const bookCollection = client.db("libraryManagement").collection("books");
     const categoryCollection = client
       .db("libraryManagement")
@@ -66,7 +71,10 @@ async function run() {
 
     /////Books related api
     // get data method
-    app.get("/api/v1/books", gateman, async (req, res) => {
+    app.get("/api/v1/books", async (req, res) => {
+      // if (req.query.email !== req.user.email) {
+      //   return res.status(403).send({ message: "forbidden access" });
+      // }
       let query = {};
 
       const category = req.query.category;
@@ -88,12 +96,15 @@ async function run() {
     });
 
     // get borrowed books
-    app.get("/api/v1/borrowedbooks", gateman, async (req, res) => {
-      const { email } = req.query;
-      // console.log(email);
+    app.get("/api/v1/borrowedbooks", async (req, res) => {
+      // const  email  = req.query.email;
+
+      // if (req.query.email !== req.user.email) {
+      //   return res.status(403).send({ message: "forbidden access" });
+      // }
       let query = {};
       if (req.query?.email) {
-        query = { userEmail: email };
+        query = { userEmail: req.query.email };
       }
       const result = await borrowBookCollection.find(query).toArray();
       res.send(result);
@@ -161,16 +172,17 @@ async function run() {
 
       // console.log(token);
       res
-        .cookie("tok", token, {
+        .cookie("token", token, {
           httpOnly: true,
-          secure: true,
+          secure: false,
         })
         .send({ success: true });
     });
 
     app.post("/logout", async (req, res) => {
       const user = req.body;
-      res.clearCookie("tok", { maxAge: 0 }).send({ success: true });
+      console.log(user);
+      res.clearCookie("token", { maxAge: 0 }).send({ success: true });
     });
 
     /////////////////////
@@ -184,7 +196,7 @@ async function run() {
     });
 
     // post book data method
-    app.post("/api/v1/books", gateman, async (req, res) => {
+    app.post("/api/v1/books", async (req, res) => {
       const book = req.body;
       // console.log(book);
       const result = await bookCollection.insertOne(book);
@@ -206,7 +218,7 @@ async function run() {
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
   } finally {
-    // Ensures that the client will close when you finish/error
+    // Ensures that the client will close when you finish/error //
     // await client.close();
   }
 }
