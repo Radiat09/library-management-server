@@ -15,6 +15,8 @@ app.use(
       "http://localhost:5173",
       "https://library-management-rid.web.app",
       "https://library-management-rid.firebaseapp.com",
+      "https://librarymanagement-rid.web.app",
+      "https://librarymanagement-rid.firebaseapp.com",
     ],
     credentials: true,
   })
